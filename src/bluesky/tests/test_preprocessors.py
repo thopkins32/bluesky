@@ -7,7 +7,11 @@ from bluesky.preprocessors import (
     contingency_decorator,
     contingency_wrapper,
     msg_mutator,
+    repeat_as_stub_wrapper,
+    stage_decorator,
+    run_decorator,
 )
+from bluesky.protocols import Stageable, HasParent, HasName, Movable
 from bluesky.run_engine import RequestStop, RunEngine
 
 
@@ -116,3 +120,45 @@ def test_exceptions_through_msg_mutator():
     else:
         raise False  # noqa: B016
     assert ["step 0+", "step 1+", "step 2+", "step 3+", "handle it+"] == [m.command for m in msgs]
+
+
+def test_repeat_as_stub_wrapper():
+    class Device(Stageable, HasParent, HasName, Movable):
+        ...
+
+    stageable1 = MagicMock(spec=Device)
+    stageable2 = MagicMock(spec=Device)
+    stageable1.name = "stageable1"
+    stageable2.name = "stageable2"
+    stageable1.parent = None
+    stageable2.parent = None
+
+    @stage_decorator([stageable1, stageable2])
+    @run_decorator(md={"plan_name": "test_plan"})
+    def plan(stageable1, stageable2):
+        yield from bps.mv(stageable1, 1)
+        yield from bps.mv(stageable2, 2)
+
+    gen = repeat_as_stub_wrapper(plan(stageable1, stageable2), num_repeats=2)
+
+    commands = []
+    for msg in gen:
+        commands.append(msg.command)
+        if msg.command == "open_run":
+            assert msg.kwargs == {"plan_name": "test_plan", "num_repeats": 2}
+    assert commands == [
+        "open_run",
+        "stage",
+        "set",
+        "wait",
+        "stage",
+        "set",
+        "wait",
+        "set",
+        "wait",
+        "set",
+        "wait",
+        "close_run",
+        "unstage",
+        "unstage",
+    ]

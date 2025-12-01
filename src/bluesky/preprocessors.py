@@ -1,9 +1,9 @@
 import uuid
 from collections import ChainMap, OrderedDict, deque
 from collections.abc import Iterable
-from functools import wraps
+from functools import wraps, partial
 
-from bluesky.protocols import Locatable
+from bluesky.protocols import Locatable, Stageable, HasName
 
 from .plan_stubs import (
     close_run,
@@ -14,6 +14,7 @@ from .plan_stubs import (
     stage_all,
     trigger_and_read,
     unstage_all,
+    caching_repeater,
 )
 from .utils import (
     Msg,
@@ -1252,6 +1253,43 @@ def baseline_wrapper(plan, devices, name="baseline"):
         return (yield from plan_mutator(plan, insert_baseline))
 
 
+def repeat_as_stub_wrapper(plan, num_repeats=1, md=None):
+    """
+    Wrap a plan to repeat it a given number of times as a stub plan.
+    
+    Lazy staging so that the devices are only staged once for the entire plan.
+
+    Parameters
+    ----------
+    plan : MsgGenerator
+        The plan to wrap as a generator.
+    num_repeats : int, optional
+        Number of times to repeat the plan. Default is 1.
+    md : dict, optional
+        Metadata to add to the wrapped plan.
+    """
+
+    # Extract the metadata from the plan and cache it
+    cached_plan = list(plan)
+    _md = md or {}
+    for msg in cached_plan:
+        if msg.command == "open_run":
+            _md.update(msg.kwargs)
+            break
+    _md.update(
+        {
+            "num_repeats": num_repeats,
+        }
+    )
+
+    @lazily_stage_decorator()
+    @run_decorator(md=_md)
+    def inner():
+        return (yield from caching_repeater(num_repeats, stub_wrapper(msg for msg in cached_plan)))
+
+    return (yield from inner())
+
+
 # Make generator function decorator for each generator instance wrapper.
 baseline_decorator = make_decorator(baseline_wrapper)
 subs_decorator = make_decorator(subs_wrapper)
@@ -1269,6 +1307,7 @@ run_decorator = make_decorator(run_wrapper)
 contingency_decorator = make_decorator(contingency_wrapper)
 stub_decorator = make_decorator(stub_wrapper)
 configure_count_time_decorator = make_decorator(configure_count_time_wrapper)
+repeat_as_stub_decorator = make_decorator(repeat_as_stub_wrapper)
 
 
 class SupplementalData:
