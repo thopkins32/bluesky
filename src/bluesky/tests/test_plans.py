@@ -722,3 +722,29 @@ def test_input_plan(RE):
 
     with patch("bluesky.utils.sys.stdin.readline", return_value="answer\n"):
         RE(plan())
+
+
+def test_repeat_as_stub(RE, hw):
+    motor1 = hw.motor1
+    motor2 = hw.motor2
+    det = hw.det
+    with (
+        patch.object(motor1, "stage", wraps=motor1.stage) as motor1_stage,
+        patch.object(motor2, "stage", wraps=motor2.stage) as motor2_stage,
+        patch.object(det, "stage", wraps=det.stage) as det_stage,
+        patch.object(motor1, "unstage", wraps=motor1.unstage) as motor1_unstage,
+        patch.object(motor2, "unstage", wraps=motor2.unstage) as motor2_unstage,
+        patch.object(det, "unstage", wraps=det.unstage) as det_unstage,
+    ):
+        plan = bpp.repeat_as_stub_wrapper(bp.grid_scan([det], motor1, 1, 2, 3, motor2, 4, 5, 6), num_repeats=2)
+        uid = RE(plan)
+
+        # Check that the stage and unstage methods were called exactly once for each device
+        assert motor1_stage.call_count == 1
+        assert motor2_stage.call_count == 1
+        assert det_stage.call_count == 1
+        assert motor1_unstage.call_count == 1
+        assert motor2_unstage.call_count == 1
+        assert det_unstage.call_count == 1
+
+    assert uid is not None
