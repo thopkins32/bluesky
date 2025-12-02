@@ -1,3 +1,4 @@
+import pdb
 import uuid
 from collections import ChainMap, OrderedDict, deque
 from collections.abc import Iterable
@@ -952,6 +953,7 @@ def lazily_stage_wrapper(plan):
     devices_staged = []
 
     def inner(msg):
+        pdb.set_trace()
         if msg.command in COMMANDS and msg.obj not in devices_staged:
             root = root_ancestor(msg.obj)
 

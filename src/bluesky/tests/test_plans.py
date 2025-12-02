@@ -748,3 +748,19 @@ def test_single_run_repeat(RE, hw):
         assert det_unstage.call_count == 1
 
     assert uid is not None
+
+
+def test_single_run_repeat_duplicate_device(RE, hw):
+    det = hw.det
+    with (
+        patch.object(det, "stage", wraps=det.stage) as det_stage,
+        patch.object(det, "unstage", wraps=det.unstage) as det_unstage,
+    ):
+        plan = bpp.single_run_repeat_wrapper(bp.list_scan([det], det.sigma, [1, 2, 3]), num_repeats=2)
+        uid = RE(plan)
+
+        # Check that the stage and unstage methods were called exactly once for each distinct device
+        assert det_stage.call_count == 1
+        assert det_unstage.call_count == 1
+
+    assert uid is not None
