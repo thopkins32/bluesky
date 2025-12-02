@@ -1,11 +1,12 @@
 import uuid
 from collections import ChainMap, OrderedDict, deque
 from collections.abc import Iterable
-from functools import wraps, partial
+from functools import wraps
 
-from bluesky.protocols import Locatable, Stageable, HasName
+from bluesky.protocols import Locatable
 
 from .plan_stubs import (
+    caching_repeater,
     close_run,
     declare_stream,
     mv,
@@ -14,7 +15,6 @@ from .plan_stubs import (
     stage_all,
     trigger_and_read,
     unstage_all,
-    caching_repeater,
 )
 from .utils import (
     Msg,
@@ -1256,7 +1256,7 @@ def baseline_wrapper(plan, devices, name="baseline"):
 def repeat_as_stub_wrapper(plan, num_repeats=1, md=None):
     """
     Wrap a plan to repeat it a given number of times as a stub plan.
-    
+
     Lazy staging so that the devices are only staged once for the entire plan.
 
     Parameters

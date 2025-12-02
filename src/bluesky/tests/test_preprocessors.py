@@ -8,10 +8,10 @@ from bluesky.preprocessors import (
     contingency_wrapper,
     msg_mutator,
     repeat_as_stub_wrapper,
-    stage_decorator,
     run_decorator,
+    stage_decorator,
 )
-from bluesky.protocols import Stageable, HasParent, HasName, Movable
+from bluesky.protocols import HasName, HasParent, Movable, Stageable
 from bluesky.run_engine import RequestStop, RunEngine
 
 
@@ -123,8 +123,7 @@ def test_exceptions_through_msg_mutator():
 
 
 def test_repeat_as_stub_wrapper():
-    class Device(Stageable, HasParent, HasName, Movable):
-        ...
+    class Device(Stageable, HasParent, HasName, Movable): ...
 
     stageable1 = MagicMock(spec=Device)
     stageable2 = MagicMock(spec=Device)
