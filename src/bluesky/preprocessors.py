@@ -1253,11 +1253,11 @@ def baseline_wrapper(plan, devices, name="baseline"):
         return (yield from plan_mutator(plan, insert_baseline))
 
 
-def repeat_as_stub_wrapper(plan, num_repeats=1, md=None):
+def single_run_repeat_wrapper(plan, num_repeats=1, md=None):
     """
-    Wrap a plan to repeat it a given number of times as a stub plan.
+    Wrap a plan to repeat it a given number of times and wrap it in a single run.
 
-    Lazy staging so that the devices are only staged once for the entire plan.
+    Lazy staging so that the devices are only staged/unstaged once for the entire plan.
 
     Parameters
     ----------
@@ -1307,7 +1307,7 @@ run_decorator = make_decorator(run_wrapper)
 contingency_decorator = make_decorator(contingency_wrapper)
 stub_decorator = make_decorator(stub_wrapper)
 configure_count_time_decorator = make_decorator(configure_count_time_wrapper)
-repeat_as_stub_decorator = make_decorator(repeat_as_stub_wrapper)
+single_run_repeat_decorator = make_decorator(single_run_repeat_wrapper)
 
 
 class SupplementalData:

@@ -660,12 +660,12 @@ a generator instance. The corresponding functions named
     monitor_during_wrapper
     relative_set_decorator
     relative_set_wrapper
-    repeat_as_stub_decorator
-    repeat_as_stub_wrapper
     reset_positions_decorator
     reset_positions_wrapper
     run_decorator
     run_wrapper
+    single_run_repeat_decorator
+    single_run_repeat_wrapper
     stage_decorator
     stage_wrapper
     stub_decorator

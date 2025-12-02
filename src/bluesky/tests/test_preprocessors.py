@@ -7,8 +7,8 @@ from bluesky.preprocessors import (
     contingency_decorator,
     contingency_wrapper,
     msg_mutator,
-    repeat_as_stub_wrapper,
     run_decorator,
+    single_run_repeat_wrapper,
     stage_decorator,
 )
 from bluesky.protocols import HasName, HasParent, Movable, Stageable
@@ -122,7 +122,7 @@ def test_exceptions_through_msg_mutator():
     assert ["step 0+", "step 1+", "step 2+", "step 3+", "handle it+"] == [m.command for m in msgs]
 
 
-def test_repeat_as_stub_wrapper():
+def test_single_run_repeat_wrapper():
     class Device(Stageable, HasParent, HasName, Movable): ...
 
     stageable1 = MagicMock(spec=Device)
@@ -138,7 +138,7 @@ def test_repeat_as_stub_wrapper():
         yield from bps.mv(stageable1, 1)
         yield from bps.mv(stageable2, 2)
 
-    gen = repeat_as_stub_wrapper(plan(stageable1, stageable2), num_repeats=2)
+    gen = single_run_repeat_wrapper(plan(stageable1, stageable2), num_repeats=2)
 
     commands = []
     for msg in gen:

@@ -724,7 +724,7 @@ def test_input_plan(RE):
         RE(plan())
 
 
-def test_repeat_as_stub(RE, hw):
+def test_single_run_repeat(RE, hw):
     motor1 = hw.motor1
     motor2 = hw.motor2
     det = hw.det
@@ -736,7 +736,7 @@ def test_repeat_as_stub(RE, hw):
         patch.object(motor2, "unstage", wraps=motor2.unstage) as motor2_unstage,
         patch.object(det, "unstage", wraps=det.unstage) as det_unstage,
     ):
-        plan = bpp.repeat_as_stub_wrapper(bp.grid_scan([det], motor1, 1, 2, 3, motor2, 4, 5, 6), num_repeats=2)
+        plan = bpp.single_run_repeat_wrapper(bp.grid_scan([det], motor1, 1, 2, 3, motor2, 4, 5, 6), num_repeats=2)
         uid = RE(plan)
 
         # Check that the stage and unstage methods were called exactly once for each device
