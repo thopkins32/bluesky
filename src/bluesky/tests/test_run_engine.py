@@ -785,6 +785,127 @@ def test_sigint_many_hits_pln(RE):
 
 
 @uses_os_kill_sigint
+def test_single_sigint_interrupt_no_checkpoint(RE):
+    """A single SIGINT on a plan without a checkpoint continues running"""
+    pid = os.getpid()
+
+    event = threading.Event()
+
+    def send_sigint():
+        # Wait for event
+        event.wait()
+        os.kill(pid, signal.SIGINT)
+
+    def test_plan():
+        for i in range(15):
+            if i == 1:
+                event.set()
+            yield Msg("null")
+            ttime.sleep(1.0)
+
+    # Single SIGINT defers a pause but plan finishes anyway
+    sigint_thread = threading.Thread(target=send_sigint, daemon=True)
+    sigint_thread.start()
+    RE(test_plan())
+    sigint_thread.join(timeout=0.1)
+
+
+@uses_os_kill_sigint
+def test_single_sigint_hits_checkpoint(RE):
+    """A single SIGINT on a plan with a checkpoint interrupts"""
+    pid = os.getpid()
+
+    event = threading.Event()
+
+    def send_sigint():
+        event.wait()
+        os.kill(pid, signal.SIGINT)
+
+    def infinite_plan():
+        i = 0
+        while True:
+            if i == 2:
+                event.set()
+            yield Msg("null")
+            ttime.sleep(0.1)
+            yield from checkpoint()
+            i += 1
+
+    # Single SIGINT reaches checkpoint
+    sigint_thread = threading.Thread(target=send_sigint, daemon=True)
+    sigint_thread.start()
+    with pytest.raises(RunEngineInterrupted):
+        RE(infinite_plan())
+
+    sigint_thread.join(timeout=0.1)
+
+
+@uses_os_kill_sigint
+def test_single_sigint_no_carry_over(RE):
+    """A single SIGINT does not interrupt at the next plan's checkpoint"""
+    pid = os.getpid()
+
+    event = threading.Event()
+
+    def send_sigint():
+        # Wait for event
+        event.wait()
+        os.kill(pid, signal.SIGINT)
+
+    def test_plan():
+        for i in range(5):
+            if i == 1:
+                event.set()
+            yield Msg("null")
+            ttime.sleep(1.0)
+
+    # Single SIGINT defers a pause but plan finishes anyway
+    sigint_thread = threading.Thread(target=send_sigint, daemon=True)
+    sigint_thread.start()
+    RE(test_plan())
+    sigint_thread.join(timeout=0.1)
+
+    def checkpoint_plan():
+        for _ in range(10):
+            yield Msg("null")
+            ttime.sleep(0.1)
+            yield from checkpoint()
+
+    RE(checkpoint_plan())
+
+
+@uses_os_kill_sigint
+def test_double_sigint_interrupts_now(RE):
+    """Two SIGINTs in succession interrupts immediately"""
+    pid = os.getpid()
+
+    event = threading.Event()
+
+    def send_sigint():
+        event.wait()
+        os.kill(pid, signal.SIGINT)
+        event.clear()
+        event.wait()
+        os.kill(pid, signal.SIGINT)
+
+    def test_plan():
+        i = 0
+        while True:
+            if i == 2 or i == 3:
+                event.set()
+            yield Msg("null")
+            ttime.sleep(0.1)
+            i += 1
+
+    sigint_thread = threading.Thread(target=send_sigint, daemon=True)
+    sigint_thread.start()
+    with pytest.raises(RunEngineInterrupted):
+        RE(test_plan())
+
+    sigint_thread.join(timeout=0.1)
+
+
+@uses_os_kill_sigint
 def test_sigint_many_hits_panic(RE):
     raise pytest.skip("hangs tests on exit")
     pid = os.getpid()
