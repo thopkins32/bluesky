@@ -933,7 +933,8 @@ def test_sigint_during_suspender_active(RE, hw):
     def signal_set():
         suspend_event.wait()
         bool_signal.put(True)
-        ttime.sleep(0.5)
+        while len(suspender.get_futures()[0]) == 0:
+            ttime.sleep(0.1)
         sigint_event.set()
 
     def infinite_plan():
