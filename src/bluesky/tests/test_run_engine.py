@@ -45,6 +45,7 @@ from bluesky.run_engine import (
     TransitionError,
     WaitForTimeoutError,
 )
+from bluesky.suspenders import SuspendBoolHigh
 from bluesky.tests import requires_ophyd, uses_os_kill_sigint
 from bluesky.tests.utils import DocCollector, MsgCollector
 
@@ -807,6 +808,8 @@ def test_single_sigint_interrupt_no_checkpoint(RE):
     sigint_thread = threading.Thread(target=send_sigint, daemon=True)
     sigint_thread.start()
     RE(test_plan())
+
+    assert RE.state == "idle"
     sigint_thread.join(timeout=0.1)
 
 
@@ -837,6 +840,7 @@ def test_single_sigint_hits_checkpoint(RE):
     with pytest.raises(RunEngineInterrupted):
         RE(infinite_plan())
 
+    assert RE.state == "paused"
     sigint_thread.join(timeout=0.1)
 
 
@@ -872,6 +876,7 @@ def test_single_sigint_no_carry_over(RE):
             yield from checkpoint()
 
     RE(checkpoint_plan())
+    assert RE.state == "paused"
 
 
 @uses_os_kill_sigint
@@ -902,7 +907,56 @@ def test_double_sigint_interrupts_now(RE):
     with pytest.raises(RunEngineInterrupted):
         RE(test_plan())
 
+    assert RE.state == "paused"
+
     sigint_thread.join(timeout=0.1)
+
+
+@uses_os_kill_sigint
+def test_sigint_during_suspender_active(RE, hw):
+    pid = os.getpid()
+    bool_signal = hw.bool_sig
+    suspender = SuspendBoolHigh(bool_signal)
+    suspender.install(RE)
+
+    bool_signal.put(False)
+
+    sigint_event = threading.Event()
+    suspend_event = threading.Event()
+
+    def send_sigint():
+        sigint_event.wait()
+        os.kill(pid, signal.SIGINT)
+        ttime.sleep(0.5)
+        os.kill(pid, signal.SIGINT)
+
+    def signal_set():
+        suspend_event.wait()
+        bool_signal.put(True)
+        ttime.sleep(0.5)
+        sigint_event.set()
+
+    def infinite_plan():
+        i = 0
+        while True:
+            if i == 1:
+                print("SUSPEND SET")
+                suspend_event.set()
+            yield Msg("null")
+            ttime.sleep(0.1)
+            i += 1
+
+    sigint_thread = threading.Thread(target=send_sigint, daemon=True)
+    suspender_thread = threading.Thread(target=signal_set, daemon=True)
+    sigint_thread.start()
+    suspender_thread.start()
+
+    with pytest.raises(RunEngineInterrupted):
+        RE(infinite_plan())
+
+    bool_signal.put(False)
+    sigint_thread.join(timeout=0.1)
+    suspender_thread.join(timeout=0.1)
 
 
 @uses_os_kill_sigint
