@@ -980,6 +980,147 @@ def test_sigint_during_suspender_active(RE, hw):
 
 
 @uses_os_kill_sigint
+def test_sigint_pause_during_active_suspension_no_devices(RE, hw):
+    pid = os.getpid()
+    states = []
+    wait_for_reached = threading.Event()
+    deferred_pause_done = threading.Event()
+
+    def state_hook(new_state, old_state):
+        states.append((old_state, new_state))
+
+    RE.state_hook = state_hook
+
+    def msg_hook(msg):
+        if msg.command == "wait_for":
+            wait_for_reached.set()
+
+    RE.msg_hook = msg_hook
+
+    _orig_request_pause = RE.request_pause
+
+    def _tracked_request_pause(defer=False):
+        result = _orig_request_pause(defer=defer)
+        if defer:
+            deferred_pause_done.set()
+        return result
+
+    RE.request_pause = _tracked_request_pause
+
+    bool_signal = hw.bool_sig
+    suspender = SuspendBoolHigh(bool_signal)
+    bool_signal.put(True)
+    RE.install_suspender(suspender)
+
+    def send_sigints():
+        wait_for_reached.wait(timeout=5)
+        os.kill(pid, signal.SIGINT)
+        deferred_pause_done.wait(timeout=5)
+        os.kill(pid, signal.SIGINT)
+
+    sigint_thread = threading.Thread(target=send_sigints, daemon=True)
+    sigint_thread.start()
+
+    def plan():
+        while True:
+            yield Msg("null")
+
+    with pytest.raises(RunEngineInterrupted):
+        RE(plan())
+
+    bool_signal.put(False)
+    sigint_thread.join(timeout=5)
+
+    assert ("running", "pausing") in states
+    assert RE.state == "paused"
+
+
+@uses_os_kill_sigint
+def test_sigint_spam_during_slow_suspender_causes_panic(RE, hw):
+    """A blocking obj.stop() during suspension setup freezes the event loop.
+
+    When _start_suspender calls _stop_movable_objects and a device's stop()
+    blocks (e.g. an EPICS motor with an unreachable IOC), the event loop cannot
+    process request_pause coroutines queued by SIGINTs. The user's Ctrl+C
+    presses are acknowledged by the signal handler but have no effect. After 11
+    SIGINTs the SignalHandler escalates to KeyboardInterrupt, which injects
+    _RunEnginePanic into the frozen event loop thread. Because the thread is
+    stuck in a blocking call, the 1-second timeout expires and the RE panics.
+    """
+    pid = os.getpid()
+    stop_called = threading.Event()
+    stop_proceed = threading.Event()
+    running_event = threading.Event()
+
+    class SlowStoppable:
+        """Simulates a device whose stop() blocks the event loop thread."""
+
+        name = "slow_device"
+
+        def stop(self, success=True):
+            stop_called.set()
+            stop_proceed.wait()
+
+    slow_device = SlowStoppable()
+
+    def state_hook(new_state, old_state):
+        if new_state == "running" and old_state == "idle":
+            RE._movable_objs_touched.add(slow_device)
+            running_event.set()
+
+    RE.state_hook = state_hook
+
+    bool_signal = hw.bool_sig
+    suspender = SuspendBoolHigh(bool_signal)
+    suspender.install(RE)
+    bool_signal.put(False)
+
+    def trigger_suspend():
+        running_event.wait(timeout=5)
+        bool_signal.put(True)
+
+    def send_sigints():
+        stop_called.wait(timeout=5)
+        for _ in range(11):
+            os.kill(pid, signal.SIGINT)
+            ttime.sleep(0.05)
+
+    suspend_thread = threading.Thread(target=trigger_suspend, daemon=True)
+    sigint_thread = threading.Thread(target=send_sigints, daemon=True)
+    suspend_thread.start()
+    sigint_thread.start()
+
+    def plan():
+        while True:
+            yield Msg("null")
+
+    try:
+        with pytest.raises(RunEngineInterrupted):
+            RE(plan())
+        assert RE.state == "panicked"
+    finally:
+        stop_proceed.set()
+        bool_signal.put(False)
+        RE._blocking_event.set()
+
+        async def _drain_and_stop():
+            # SigintHandler spawns non-daemon threads that block on
+            # run_coroutine_threadsafe().result().  Those futures are only
+            # resolved when asyncio processes (1) the task-step callback,
+            # (2) the task's done-callback.  Each level requires a separate
+            # _run_once iteration because asyncio caps each iteration to the
+            # callbacks present at its start.  Three yields is sufficient.
+            for _ in range(3):
+                await asyncio.sleep(0)
+            RE.loop.stop()
+
+        asyncio.run_coroutine_threadsafe(_drain_and_stop(), RE.loop)
+        RE._th.join(timeout=5)
+        sigint_thread.join(timeout=5)
+        suspend_thread.join(timeout=5)
+
+
+@uses_os_kill_sigint
 def test_sigint_many_hits_panic(RE):
     raise pytest.skip("hangs tests on exit")
     pid = os.getpid()

@@ -1463,7 +1463,10 @@ class RunEngine:
         for obj in self._movable_objs_touched:
             if isinstance(obj, Stoppable):
                 try:
-                    await maybe_await(obj.stop(success=success))
+                    if asyncio.iscoroutinefunction(obj.stop):
+                        await obj.stop(success=success)
+                    else:
+                        await self._loop.run_in_executor(None, functools.partial(obj.stop, success=success))
                 except Exception:
                     self.log.exception("Failed to stop %r.", obj)
             else:
