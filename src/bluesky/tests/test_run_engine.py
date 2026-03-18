@@ -915,49 +915,68 @@ def test_double_sigint_interrupts_now(RE):
 @uses_os_kill_sigint
 def test_sigint_during_suspender_active(RE, hw):
     pid = os.getpid()
+    states = []
+    running_event = threading.Event()
+    wait_for_reached = threading.Event()
+    deferred_pause_done = threading.Event()
+
+    def state_hook(new_state, old_state):
+        states.append((old_state, new_state))
+        if new_state == "running" and old_state == "idle":
+            running_event.set()
+
+    RE.state_hook = state_hook
+
+    def msg_hook(msg):
+        if msg.command == "wait_for":
+            wait_for_reached.set()
+
+    RE.msg_hook = msg_hook
+
+    _orig_request_pause = RE.request_pause
+
+    def _tracked_request_pause(defer=False):
+        result = _orig_request_pause(defer=defer)
+        if defer:
+            deferred_pause_done.set()
+        return result
+
+    RE.request_pause = _tracked_request_pause
+
     bool_signal = hw.bool_sig
     suspender = SuspendBoolHigh(bool_signal)
     suspender.install(RE)
-
     bool_signal.put(False)
 
-    sigint_event = threading.Event()
-    suspend_event = threading.Event()
-
-    def send_sigint():
-        sigint_event.wait()
+    def send_sigints():
+        wait_for_reached.wait(timeout=5)
         os.kill(pid, signal.SIGINT)
-        ttime.sleep(0.5)
+        deferred_pause_done.wait(timeout=5)
         os.kill(pid, signal.SIGINT)
 
-    def signal_set():
-        suspend_event.wait()
+    def trigger_suspend():
+        running_event.wait(timeout=5)
         bool_signal.put(True)
-        while len(suspender.get_futures()[0]) == 0:
-            ttime.sleep(0.1)
-        sigint_event.set()
 
     def infinite_plan():
-        i = 0
         while True:
-            if i == 1:
-                print("SUSPEND SET")
-                suspend_event.set()
             yield Msg("null")
-            ttime.sleep(0.1)
-            i += 1
 
-    sigint_thread = threading.Thread(target=send_sigint, daemon=True)
-    suspender_thread = threading.Thread(target=signal_set, daemon=True)
+    sigint_thread = threading.Thread(target=send_sigints, daemon=True)
+    suspend_thread = threading.Thread(target=trigger_suspend, daemon=True)
     sigint_thread.start()
-    suspender_thread.start()
+    suspend_thread.start()
 
     with pytest.raises(RunEngineInterrupted):
         RE(infinite_plan())
 
     bool_signal.put(False)
-    sigint_thread.join(timeout=0.1)
-    suspender_thread.join(timeout=0.1)
+    sigint_thread.join(timeout=5)
+    suspend_thread.join(timeout=5)
+
+    assert ("running", "suspending") in states
+    assert ("running", "pausing") in states
+    assert RE.state == "paused"
 
 
 @uses_os_kill_sigint
