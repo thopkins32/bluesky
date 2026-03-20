@@ -132,10 +132,8 @@ class SuspenderBase(metaclass=ABCMeta):
                 print(f"[Suspender.__call__] RE is None, returning")
                 return
             loop = self.RE._loop
-            print(f"[Suspender.__call__] Called with value={value}, _should_suspend={self._should_suspend(value)}, _should_resume={self._should_resume(value)}")
 
             if self._should_suspend(value):
-                print(f"[Suspender.__call__] SUSPEND condition met! Setting _tripped=True")
                 self._tripped = True
                 # this does dirty things with internal state
                 if self._ev is None and self.RE is not None:
