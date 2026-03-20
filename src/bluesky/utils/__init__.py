@@ -280,7 +280,9 @@ class SigintHandler(SignalHandler):
         # Check for pause requests from keyboard.
         # TODO, there is a possible race condition between the two
         # pauses here
+        print(f"[SigintHandler.handle_signals] SIGINT received. RE.state={self.RE.state}, RE._interrupted={self.RE._interrupted}, count={self.count}")
         if self.RE.state.is_running and (not self.RE._interrupted):
+            print(f"[SigintHandler.handle_signals] RE is running and not interrupted. Processing SIGINT...")
             if self.last_sigint_time is None or time.time() - self.last_sigint_time > 10:
                 # reset the counter to 1
                 # It's been 10 seconds since the last SIGINT. Reset.
@@ -290,12 +292,15 @@ class SigintHandler(SignalHandler):
 
                 # weeee push these to threads to not block the main thread
                 def maybe_defer_pause():
+                    print(f"[SigintHandler] Thread spawned to request deferred pause (defer=True)")
                     try:
                         self.RE.request_pause(True)
-                    except TransitionError:
+                        print(f"[SigintHandler] Deferred pause request succeeded")
+                    except TransitionError as e:
+                        print(f"[SigintHandler] TransitionError on deferred pause: {e}")
                         ...
 
-                threading.Thread(target=maybe_defer_pause).start()
+                threading.Thread(target=maybe_defer_pause, daemon=True).start()
                 print(
                     "A 'deferred pause' has been requested. The "
                     "RunEngine will pause at the next checkpoint. "
@@ -305,19 +310,24 @@ class SigintHandler(SignalHandler):
 
                 self.last_sigint_time = time.time()
             elif self.count == 2:
-                print("trying a second time")
+                print(f"[SigintHandler] Second SIGINT detected within 10 seconds. Requesting hard pause...")
                 # - Ctrl-C twice within 10 seconds -> hard pause
                 self.log.debug("RunEngine detected two SIGINTs. A hard pause will be requested.")
 
                 # weeee push these to threads to not block the main thread
                 def maybe_prompt_pause():
+                    print(f"[SigintHandler] Thread spawned to request hard pause (defer=False)")
                     try:
                         self.RE.request_pause(False)
-                    except TransitionError:
+                        print(f"[SigintHandler] Hard pause request succeeded")
+                    except TransitionError as e:
+                        print(f"[SigintHandler] TransitionError on hard pause: {e}")
                         ...
 
-                threading.Thread(target=maybe_prompt_pause).start()
+                threading.Thread(target=maybe_prompt_pause, daemon=True).start()
             self.last_sigint_time = time.time()
+        else:
+            print(f"[SigintHandler] Ignoring SIGINT: RE.state.is_running={self.RE.state.is_running}, RE._interrupted={self.RE._interrupted}")
 
 
 class CallbackRegistry:

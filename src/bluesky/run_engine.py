@@ -828,31 +828,44 @@ class RunEngine:
             If True, pause at the next checkpoint.
             False by default.
         """
+        print(f"[request_pause] Called with defer={defer}, current state={self.state}")
         if self.state == "panicked":
             raise RuntimeError("The RunEngine is panicked and cannot be recovered. You must restart bluesky.")
+        print(f"[request_pause] Scheduling _request_pause_coro(defer={defer}) on event loop...")
         future = asyncio.run_coroutine_threadsafe(self._request_pause_coro(defer), loop=self.loop)
         # TODO add a timeout here?
-        return future.result()
+        print(f"[request_pause] Waiting for pause coroutine result...")
+        result = future.result()
+        print(f"[request_pause] Pause request completed, result={result}")
+        return result
 
     async def _request_pause_coro(self, defer=False):
         # We are pausing. Cancel any deferred pause previously requested.
+        print(f"[_request_pause_coro] Entering with defer={defer}, current state={self.state}")
         if not self.state.can_pause:
+            print(f"[_request_pause_coro] ERROR: Cannot pause, state '{self.state}' does not support pause")
             raise TransitionError(f"Run Engine is in '{self.state}' state and can not be paused.")
 
         if defer:
+            print(f"[_request_pause_coro] Setting _deferred_pause_requested=True, will pause at next checkpoint")
             self._deferred_pause_requested = True
             print("Deferred pause acknowledged. Continuing to checkpoint.")
             return
 
+        print("[_request_pause_coro] Performing immediate pause...")
         print("Pausing...")
 
+        print(f"[_request_pause_coro] Setting _deferred_pause_requested=False, _interrupted=True, state=pausing")
         self._deferred_pause_requested = False
         self._interrupted = True
         self._state = "pausing"
         for current_run in self._run_bundlers.values():
+            print(f"[_request_pause_coro] Recording interruption 'pause' for run {current_run}")
             current_run.record_interruption("pause")
 
+        print(f"[_request_pause_coro] Cancelling current task {self._task}")
         self._task.cancel()
+        print(f"[_request_pause_coro] Task cancelled")
 
     def _create_result(self, plan_return):
         """
@@ -1329,29 +1342,39 @@ class RunEngine:
         return self.__interrupter_helper(self._abort_coro(reason))
 
     async def _abort_coro(self, reason):
+        print(f"[_abort_coro] Called with reason='{reason}', state={self._state}, was_paused={self._state == 'paused'}")
         if self._state.is_idle:
+            print(f"[_abort_coro] ERROR: Engine is idle, cannot abort")
             raise TransitionError("RunEngine is already idle.")
         print("Aborting: running cleanup and marking exit_status as 'abort'...")
+        print(f"[_abort_coro] Setting _interrupted=True, _reason='{reason}', _exit_status='abort'")
         self._interrupted = True
         self._reason = reason
 
         self._exit_status = "abort"
+        print(f"[_abort_coro] Destroying open run tracing spans")
         self._destroy_open_run_tracing_spans()
 
         was_paused = self._state == "paused"
         self._state = "aborting"
+        print(f"[_abort_coro] State set to 'aborting'")
         if was_paused:
+            print(f"[_abort_coro] Was paused, setting exception RequestAbort with state lock")
             with self._state_lock:
                 self._exception = RequestAbort()
         else:
+            print(f"[_abort_coro] Was not paused, cancelling task {self._task}")
             self._task.cancel()
 
         if self._call_returns_result:
             plan_return = self.NO_PLAN_RETURN
             run_engine_result = self._create_result(plan_return)
+            print(f"[_abort_coro] Returning RunEngineResult: {run_engine_result}")
             return run_engine_result
         else:
-            return tuple(self._run_start_uids)
+            result = tuple(self._run_start_uids)
+            print(f"[_abort_coro] Returning tuple of UIDs: {result}")
+            return result
 
     def stop(self):
         """
@@ -1373,25 +1396,33 @@ class RunEngine:
         return self.__interrupter_helper(self._stop_coro())
 
     async def _stop_coro(self):
+        print(f"[_stop_coro] Called, state={self._state}, was_paused={self._state == 'paused'}")
         if self._state.is_idle:
+            print(f"[_stop_coro] ERROR: Engine is idle, cannot stop")
             raise TransitionError("RunEngine is already idle.")
         print("Stopping: running cleanup and marking exit_status as 'success'...")
 
+        print(f"[_stop_coro] Setting _interrupted=True, state=stopping")
         self._interrupted = True
         was_paused = self._state == "paused"
         self._state = "stopping"
         if was_paused:
+            print(f"[_stop_coro] Was paused, setting exception RequestStop with state lock")
             with self._state_lock:
                 self._exception = RequestStop
         else:
+            print(f"[_stop_coro] Was not paused, cancelling task {self._task}")
             self._task.cancel()
 
         if self._call_returns_result:
             plan_return = self.NO_PLAN_RETURN
             run_engine_result = self._create_result(plan_return)
+            print(f"[_stop_coro] Returning RunEngineResult: {run_engine_result}")
             return run_engine_result
         else:
-            return tuple(self._run_start_uids)
+            result = tuple(self._run_start_uids)
+            print(f"[_stop_coro] Returning tuple of UIDs: {result}")
+            return result
 
     def halt(self):
         """
@@ -1413,6 +1444,7 @@ class RunEngine:
         return self.__interrupter_helper(self._halt_coro())
 
     def __interrupter_helper(self, coro):
+        print(f"[__interrupter_helper] Called, state={self.state}")
         if self.state == "panicked":
             coro.close()
             raise RuntimeError("The RunEngine is panicked and cannot be recovered. You must restart bluesky.")
@@ -1421,42 +1453,60 @@ class RunEngine:
         task = None
 
         def end_cb(fut):
+            print(f"[__interrupter_helper.end_cb] Task completed, setting event")
             coro_event.set()
 
         def start_task():
             nonlocal task
+            print(f"[__interrupter_helper.start_task] Creating task on event loop")
             task = self.loop.create_task(coro)
             task.add_done_callback(end_cb)
+            print(f"[__interrupter_helper.start_task] Task created: {task}")
 
         was_paused = self._state == "paused"
+        print(f"[__interrupter_helper] was_paused={was_paused}, calling call_soon_threadsafe(start_task)")
         self.loop.call_soon_threadsafe(start_task)
+        print(f"[__interrupter_helper] Waiting for coro_event...")
         coro_event.wait()
+        print(f"[__interrupter_helper] Coro event received, task done")
         if was_paused:
+            print(f"[__interrupter_helper] Was paused, calling _resume_task()")
             self._resume_task()
 
-        return task.result()
+        result = task.result()
+        print(f"[__interrupter_helper] Returning result: {result}")
+        return result
 
     async def _halt_coro(self):
+        print(f"[_halt_coro] Called, state={self._state}, was_paused={self._state == 'paused'}")
         if self._state.is_idle:
+            print(f"[_halt_coro] ERROR: Engine is idle, cannot halt")
             raise TransitionError("RunEngine is already idle.")
         print("Halting: skipping cleanup and marking exit_status as 'abort'...")
+        print(f"[_halt_coro] Destroying open run tracing spans")
         self._destroy_open_run_tracing_spans()
+        print(f"[_halt_coro] Setting _interrupted=True, state=halting")
         self._interrupted = True
         was_paused = self._state == "paused"
         self._state = "halting"
         if was_paused:
+            print(f"[_halt_coro] Was paused, setting exception PlanHalt with state lock")
             with self._state_lock:
                 self._exception = PlanHalt
                 self._exit_status = "abort"
         else:
+            print(f"[_halt_coro] Was not paused, cancelling task {self._task}")
             self._task.cancel()
 
         if self._call_returns_result:
             plan_return = self.NO_PLAN_RETURN
             run_engine_result = self._create_result(plan_return)
+            print(f"[_halt_coro] Returning RunEngineResult: {run_engine_result}")
             return run_engine_result
         else:
-            return tuple(self._run_start_uids)
+            result = tuple(self._run_start_uids)
+            print(f"[_halt_coro] Returning tuple of UIDs: {result}")
+            return result
 
     async def _stop_movable_objects(self, *, success=True):
         "Call obj.stop() for all objects we have moved. Log any exceptions."
@@ -1501,9 +1551,13 @@ class RunEngine:
         exit_reason = ""
         try:
             self._state = "running"
+            print(f"[_run] Entering main loop, initial state={self._state}")
             while True:
+                print(f"[_run] Loop iteration: state={self._state}, _run_permit.is_set()={self._run_permit.is_set()}, _deferred_pause_requested={self._deferred_pause_requested}")
                 if self._state in ("pausing", "suspending"):
+                    print(f"[_run] State is pausing/suspending, checking if resumable={self.resumable}")
                     if not self.resumable:
+                        print(f"[_run] Not resumable, setting _run_permit and transitioning to aborting")
                         self._run_permit.set()
                         stashed_exception = FailedPause()
 
@@ -1513,18 +1567,23 @@ class RunEngine:
                 # block above, we do not have a 'suspended' state
                 # (yet)
                 if self._state == "suspending":
+                    print(f"[_run] Transitioning from suspending to running")
                     self._state = "running"
                 if not self._run_permit.is_set():
                     # A pause has been requested. First, put everything in a
                     # resting state.
+                    print(f"[_run] PAUSE HANDLING: _run_permit is NOT set, entering pause cleanup sequence")
                     assert self._state == "pausing"
+                    print(f"[_run] Suspending monitors...")
                     # Remove any monitoring callbacks, but keep refs in
                     # self._monitor_params to re-instate them later.
                     for current_run in self._run_bundlers.values():
                         await current_run.suspend_monitors()
+                    print(f"[_run] Stopping movable objects...")
                     # During pause, all motors should be stopped. Call stop()
                     # on every object we ever set().
                     await self._stop_movable_objects(success=True)
+                    print(f"[_run] Pausing devices...")
                     # Notify Devices of the pause in case they want to
                     # clean up.
                     for obj in self._objs_seen:
@@ -1533,17 +1592,24 @@ class RunEngine:
                                 await maybe_await(obj.pause())
                             except NoReplayAllowed:
                                 self._reset_checkpoint_state_meth()
+                    print(f"[_run] Transitioning to paused state and signaling _blocking_event")
                     self._state = "paused"
                     # Let RunEngine.__call__ return...
                     self._blocking_event.set()
 
+                    print(f"[_run] PAUSED: Waiting for _run_permit to be set (resume/stop/abort/halt)...")
                     await self._run_permit.wait()
+                    print(f"[_run] _run_permit set, resuming. Current state={self._state}")
                     # Restore any monitors
+                    print(f"[_run] Restoring monitors...")
                     for current_run in self._run_bundlers.values():
                         await current_run.restore_monitors()
                     if self._state == "paused":
                         # may be called by 'resume', 'stop', 'abort', 'halt'
+                        print(f"[_run] State is still 'paused', transitioning to 'running'")
                         self._state = "running"
+                    else:
+                        print(f"[_run] State changed to {self._state}, not transitioning to running (likely cleanup in progress)")
 
                     # If we are here, we have come back to life either to
                     # continue (resume) or to clean up before exiting.

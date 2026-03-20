@@ -129,16 +129,21 @@ class SuspenderBase(metaclass=ABCMeta):
         """
         with self._lock:
             if self.RE is None:
+                print(f"[Suspender.__call__] RE is None, returning")
                 return
             loop = self.RE._loop
+            print(f"[Suspender.__call__] Called with value={value}, _should_suspend={self._should_suspend(value)}, _should_resume={self._should_resume(value)}")
 
             if self._should_suspend(value):
+                print(f"[Suspender.__call__] SUSPEND condition met! Setting _tripped=True")
                 self._tripped = True
                 # this does dirty things with internal state
                 if self._ev is None and self.RE is not None:
+                    print(f"[Suspender.__call__] Creating event for suspension")
                     self.__make_event()
                     if self._ev is None:
                         raise RuntimeError("Could not create the ")
+                    print(f"[Suspender.__call__] Scheduling request_suspend on event loop")
                     cb = partial(
                         self.RE.request_suspend,
                         self._ev.wait,
@@ -147,10 +152,15 @@ class SuspenderBase(metaclass=ABCMeta):
                         justification=self._get_justification(),
                     )
                     if self.RE.state.is_running:
+                        print(f"[Suspender.__call__] RE is running, calling call_soon_threadsafe(request_suspend)")
                         loop.call_soon_threadsafe(cb)
+                    else:
+                        print(f"[Suspender.__call__] RE is not running (state={self.RE.state}), not scheduling suspend")
             elif self._should_resume(value):
+                print(f"[Suspender.__call__] RESUME condition met! Setting event")
                 self.__set_event(loop)
                 self._tripped = False
+                print(f"[Suspender.__call__] Resume complete, _tripped=False")
 
     def __make_event(self):
         """Make or return the asyncio.Event to use as a bridge."""
@@ -170,6 +180,7 @@ class SuspenderBase(metaclass=ABCMeta):
     def __set_event(self, loop):
         """Notify the event that it can resume"""
         assert self._lock.locked()
+        print(f"[Suspender.__set_event] Called, _ev={self._ev}, sleep={self._sleep}")
         if self._ev:
             ev = self._ev
             sleep = self._sleep
@@ -177,18 +188,24 @@ class SuspenderBase(metaclass=ABCMeta):
             def local():
                 ts = (datetime.now() + timedelta(seconds=sleep)).strftime("%Y-%m-%d %H:%M:%S")
                 print(
-                    f"Suspender {self!r} reports a return to nominal "
+                    f"[Suspender.local] Suspender {self!r} reports a return to nominal "
                     f"conditions. Will sleep for {sleep} seconds and then "
                     f"release suspension at {ts}."
                 )
                 # we can use call_later here because this function
                 # is scheduled to be run in the event loop thread
                 # by the `call_soon_threadsafe` call just below.
+                print(f"[Suspender.local] Scheduling event.set() in {sleep} seconds")
                 loop.call_later(sleep, ev.set)
+                print(f"[Suspender.local] Event set scheduled")
 
+            print(f"[Suspender.__set_event] Calling call_soon_threadsafe(local)")
             loop.call_soon_threadsafe(local)
+        else:
+            print(f"[Suspender.__set_event] _ev is None, nothing to set")
         # clear that we have an event
         self._ev = None
+        print(f"[Suspender.__set_event] Cleared _ev")
 
     def get_futures(self):
         """Return a list of futures to wait on.
