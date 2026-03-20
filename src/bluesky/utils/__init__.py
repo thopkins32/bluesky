@@ -238,13 +238,14 @@ class SignalHandler:
         self.count = 0
 
         self.original_handler = signal.getsignal(self.sig)
+        print(f"[SigintHandler.__enter__]: {self.original_handler}")
 
         def handler(signum, frame):
-            self.log.debug("[SigintHandler]: CALLED `handler`")
+            self.log.info("[SigintHandler]: CALLED `handler`")
             self.interrupted = True
             self.count += 1
             if self.log is not None:
-                self.log.debug("SignalHandler caught SIGINT; count is %r", self.count)
+                self.log.info("SignalHandler caught SIGINT; count is %r", self.count)
             if self.count > 10:
                 orig_func = self.original_handler
                 self.release()
