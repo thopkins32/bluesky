@@ -241,7 +241,8 @@ class SignalHandler:
         print(f"[SigintHandler.__enter__]: {self.original_handler}")
 
         def handler(signum, frame):
-            self.log.info("[SigintHandler]: CALLED `handler`")
+            self.log.info(f"[SigintHanlder.__enter__.handler]: %r", self)
+            self.log.info("[SigintHandler.__enter__.handler]: CALLED `handler`")
             self.interrupted = True
             self.count += 1
             if self.log is not None:
