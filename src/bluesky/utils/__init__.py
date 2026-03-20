@@ -240,7 +240,7 @@ class SignalHandler:
         self.original_handler = signal.getsignal(self.sig)
 
         def handler(signum, frame):
-            print("[SigintHandler]: CALLED `handler`")
+            self.log.debug("[SigintHandler]: CALLED `handler`")
             self.interrupted = True
             self.count += 1
             if self.log is not None:
