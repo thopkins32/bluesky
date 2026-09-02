@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>bluesky.bundlers.RunBundler.kickoff &#8212; bluesky 0.1.dev5727+g6f839a1a2 documentation</title>
+    <title>bluesky.bundlers.RunBundler.kickoff &#8212; bluesky 0.1.dev5738+g6a82217aa documentation</title>
   
   
   
@@ -39,14 +39,14 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../_static/documentation_options.js?v=9ac50bcd"></script>
+    <script src="../_static/documentation_options.js?v=ff18209d"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/bluesky.bundlers.RunBundler.kickoff';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://blueskyproject.io/bluesky/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.dev5727+g6f839a1a2';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.dev5738+g6a82217aa';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
@@ -57,7 +57,7 @@
     <link rel="prev" title="bluesky.bundlers.RunBundler.save" href="bluesky.bundlers.RunBundler.save.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev5727+g6f839a1a2" />
+  <meta name="docsearch:version" content="0.1.dev5738+g6a82217aa" />
   
     
     <script src="../_static/searchtools.js"></script>
@@ -605,14 +605,14 @@
 <dd><p>Start a flyscan object.</p>
 <p>Expected message object is:</p>
 <p>If <cite>flyer_object</cite> has a <cite>kickoff</cite> function that takes no arguments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Msg</span><span class="p">(</span><span class="s1">&#39;kickoff&#39;</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">)</span>
-<span class="n">Msg</span><span class="p">(</span><span class="s1">&#39;kickoff&#39;</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">,</span> <span class="n">group</span><span class="o">=&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Msg</span><span class="p">(</span><span class="s1">'kickoff'</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">)</span>
+<span class="n">Msg</span><span class="p">(</span><span class="s1">'kickoff'</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">,</span> <span class="n">group</span><span class="o">=&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If <em>flyer_object</em> has a <code class="docutils literal notranslate"><span class="pre">kickoff</span></code> function that takes
 <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">stop,</span> <span class="pre">steps)</span></code> as its function arguments:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Msg</span><span class="p">(</span><span class="s1">&#39;kickoff&#39;</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
-<span class="n">Msg</span><span class="p">(</span><span class="s1">&#39;kickoff&#39;</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">group</span><span class="o">=&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Msg</span><span class="p">(</span><span class="s1">'kickoff'</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+<span class="n">Msg</span><span class="p">(</span><span class="s1">'kickoff'</span><span class="p">,</span> <span class="n">flyer_object</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">group</span><span class="o">=&lt;</span><span class="n">name</span><span class="o">&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -674,7 +674,7 @@
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/bluesky/bluesky/edit/0.1.dev5727+g6f839a1a2/docs/generated/bluesky.bundlers.RunBundler.kickoff.rst">
+    <a href="https://github.com/bluesky/bluesky/edit/0.1.dev5738+g6a82217aa/docs/generated/bluesky.bundlers.RunBundler.kickoff.rst">
       <i class="fa-solid fa-pencil"></i>
       
       
