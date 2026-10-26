@@ -19,6 +19,19 @@ Added
   event types, so a caller asking for one would otherwise get a suspender
   watching something else with nothing said.
 - ``bluesky.plan_stubs.loc`` locates one object and returns its ``Location``.
+- ``bluesky.plan_queue.PlanQueue``: an editable, ordered list of plans that
+  the RunEngine runs one at a time, as an alternative to writing a "macro"
+  plan for a shift.  Items are a plan function plus arguments, so the
+  remaining steps can be listed, reordered, dropped or added to at any pause.
+  Each item is its own ``RE(plan)`` call: Ctrl+C pauses the item as usual and
+  ``resume()``, ``skip()`` and ``hold()`` decide what happens next; an item
+  that raises goes back to the front of the queue and the queue holds, so
+  nothing after it is lost and nothing after it runs until asked.  Runs carry
+  ``queue_item_uid`` metadata, and ``queue.history`` records each finished
+  item with its ``RunEngineResult``.  Blocking only: the queue runs on the
+  calling thread.
+- ``RunEngine.state_hook`` is annotated as an optional callable, so assigning
+  a hook type-checks.
 
 Removed
 -------

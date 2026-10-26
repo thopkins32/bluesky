@@ -6,6 +6,7 @@ User Documentation
 
    tutorial
    plans
+   plan_queue
    documents
    metadata
    callbacks

@@ -476,7 +476,7 @@ class RunEngine:
 
         self.max_depth = None
         self.msg_hook = None
-        self.state_hook = None
+        self.state_hook: Callable[[str, str], None] | None = None
         self.waiting_hook = None
         self.record_interruptions = False
         self.pause_msg = PAUSE_MSG
