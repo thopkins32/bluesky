@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bluesky.protocols &#8212; bluesky 0.1.dev5738+g6a82217aa documentation</title>
+    <title>bluesky.protocols &#8212; bluesky 1.15.2.dev293+g1fb2f4e13 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../_static/documentation_options.js?v=ff18209d"></script>
+    <script src="../../_static/documentation_options.js?v=8665b3c3"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
@@ -403,7 +403,7 @@ window.runMermaid = runMermaid;</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://blueskyproject.io/bluesky/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.dev5738+g6a82217aa';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.15.2.dev293+g1fb2f4e13';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
@@ -412,7 +412,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev5738+g6a82217aa" />
+  <meta name="docsearch:version" content="1.15.2.dev293+g1fb2f4e13" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -911,7 +911,7 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for bluesky.protocols</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncIterator</span><span class="p">,</span> <span class="n">Awaitable</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">ParamSpec</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">TypeAlias</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">runtime_checkable</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">event_model.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Datum</span><span class="p">,</span> <span class="n">StreamDatum</span><span class="p">,</span> <span class="n">StreamResource</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">event_model.documents.event</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartialEvent</span>
@@ -920,7 +920,11 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">event_model.documents.event_descriptor</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataKey</span><span class="p">,</span> <span class="n">Dtype</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">event_model.documents.event_page</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartialEventPage</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">event_model.documents.resource</span><span class="w"> </span><span class="kn">import</span> <span class="n">PartialResource</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParamSpec</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">Unpack</span>
+
+<span class="c1"># TypedDict and Unpack are imported from typing_extensions rather than typing:</span>
+<span class="c1"># typing_extensions.TypedDict carries backported fixes recommended until Python</span>
+<span class="c1"># 3.12, and typing.Unpack is only available from Python 3.11 (floor is 3.10).</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing_extensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">Unpack</span>
 
 <span class="c1"># Squashes warning</span>
 <span class="n">Dtype</span> <span class="o">=</span> <span class="n">Dtype</span>  <span class="c1"># type: ignore</span>
@@ -944,6 +948,7 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T"</span><span class="p">)</span>
+<span class="n">T_co</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T_co"</span><span class="p">,</span> <span class="n">contravariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">P</span> <span class="o">=</span> <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">"P"</span><span class="p">)</span>
 <span class="n">R_co</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"R_co"</span><span class="p">,</span> <span class="n">covariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1193,11 +1198,11 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="Preparable">
 <a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Preparable">[docs]</a>
 <span class="nd">@runtime_checkable</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Preparable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Preparable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">[</span><span class="n">T_co</span><span class="p">]):</span>
 <div class="viewcode-block" id="Preparable.prepare">
 <a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Preparable.prepare">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">T_co</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Status</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Prepare a device for scanning.</span>
 
 <span class="sd">        This method provides similar functionality to ``Stageable.stage`` and</span>
@@ -1348,9 +1353,6 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<span class="n">T_co</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"T_co"</span><span class="p">,</span> <span class="n">contravariant</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-
 <div class="viewcode-block" id="Movable">
 <a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Movable">[docs]</a>
 <span class="nd">@runtime_checkable</span>
@@ -1489,7 +1491,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="Stoppable.stop">
 <a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Stoppable.stop">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SyncOrAsync</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SyncOrAsync</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Safely stop a device that may or may not be in motion.</span>
 
 <span class="sd">        The argument ``success`` is a boolean.</span>
@@ -1512,10 +1514,10 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Subscribable">[docs]</a>
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Subscribable</span><span class="p">(</span><span class="n">HasName</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
-<div class="viewcode-block" id="Subscribable.subscribe">
-<a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Subscribable.subscribe">[docs]</a>
+<div class="viewcode-block" id="Subscribable.subscribe_reading">
+<a class="viewcode-back" href="../../hardware.html#bluesky.protocols.Subscribable.subscribe_reading">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callback</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">subscribe_reading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function</span><span class="p">:</span> <span class="n">Callback</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Subscribe to updates in value of a device.</span>
 
 <span class="sd">        When the device has a new value ready, it should call ``function``</span>
@@ -1623,6 +1625,21 @@ window.runMermaid = runMermaid;</script>
 
 <span class="c1"># Descriptor with previous name on imports for backwards compatibility.</span>
 <span class="n">Descriptor</span> <span class="o">=</span> <span class="n">DataKey</span>
+
+
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Executable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">[</span><span class="n">P</span><span class="p">,</span> <span class="n">R_co</span><span class="p">]):</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">P</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatusWithResult</span><span class="p">[</span><span class="n">R_co</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Execute a remote procedural call on a device</span>
+
+<span class="sd">        execute should be a method that wraps an RPC which takes any</span>
+<span class="sd">        number of positional and keyword arguments and returns a status.</span>
+<span class="sd">        When awaited, the status may return an object.</span>
+
+<span class="sd">        This can be a standard function or an ``async`` function.</span>
+<span class="sd">        """</span>
+        <span class="o">...</span>
 </pre></div>
 
                 </article>

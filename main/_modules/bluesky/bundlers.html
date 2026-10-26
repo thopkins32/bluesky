@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bluesky.bundlers &#8212; bluesky 0.1.dev5738+g6a82217aa documentation</title>
+    <title>bluesky.bundlers &#8212; bluesky 1.15.2.dev293+g1fb2f4e13 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../_static/documentation_options.js?v=ff18209d"></script>
+    <script src="../../_static/documentation_options.js?v=8665b3c3"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
@@ -403,7 +403,7 @@ window.runMermaid = runMermaid;</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://blueskyproject.io/bluesky/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.dev5738+g6a82217aa';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.15.2.dev293+g1fb2f4e13';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
@@ -412,7 +412,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev5738+g6a82217aa" />
+  <meta name="docsearch:version" content="1.15.2.dev293+g1fb2f4e13" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -1152,7 +1152,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">            Msg('close_run', None, exit_status=None, reason=None)</span>
 
-<span class="sd">        if *exit_stats* and *reason* are not provided, use the values</span>
+<span class="sd">        if *exit_status* and *reason* are not provided, use the values</span>
 <span class="sd">        stashed on the RE.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_is_open</span><span class="p">:</span>
@@ -1333,52 +1333,61 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_current_stream_cache</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_bundle_name</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RunBundler.read">
-<a class="viewcode-back" href="../../generated/bluesky.bundlers.RunBundler.read.html#bluesky.bundlers.RunBundler.read">[docs]</a>
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">reading</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_bundle_single_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">reading</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Add a reading to the open event bundle.</span>
 
+<span class="sd">        This should be used in a read message.</span>
+<span class="sd">        """</span>
+
+        <span class="c1"># if the object is not in the _describe_cache, cache it</span>
+        <span class="c1"># Note: there is a race condition between the code here</span>
+        <span class="c1"># and in monitor() and collect(), so if you do them concurrently</span>
+        <span class="c1"># on the same device you make obj.describe() calls multiple times.</span>
+        <span class="c1"># As this is harmless and not an expected use case, we don't guard</span>
+        <span class="c1"># against it. Reading multiple devices concurrently works fine.</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">ensure_cached</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="c1"># check that current read collides with nothing else in</span>
+        <span class="c1"># current event</span>
+        <span class="n">cur_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">describe_cache</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">read_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objs_read</span><span class="p">:</span>
+            <span class="c1"># that is, field names</span>
+            <span class="n">known_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">describe_cache</span><span class="p">[</span><span class="n">read_obj</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">known_keys</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">cur_keys</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Data keys (field names) from </span><span class="si">{</span><span class="n">obj</span><span class="si">!r}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"collide with those from </span><span class="si">{</span><span class="n">read_obj</span><span class="si">!r}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"The colliding keys are </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">known_keys</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">cur_keys</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+
+        <span class="c1"># add this object to the cache of things we have read</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objs_read</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+        <span class="c1"># Stash the results, which will be emitted the next time _save is</span>
+        <span class="c1"># called --- or never emitted if _drop is called instead.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">read_cache</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span>
+        <span class="c1"># Ask the object for any resource or datum documents is has cached</span>
+        <span class="c1"># and cache them as well. Likewise, these will be emitted if and</span>
+        <span class="c1"># when _save is called.</span>
+        <span class="n">asset_docs_collected</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">async</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">maybe_collect_asset_docs</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">obj</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_asset_docs_cache</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">asset_docs_collected</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">reading</span>
+
+<div class="viewcode-block" id="RunBundler.read">
+<a class="viewcode-back" href="../../generated/bluesky.bundlers.RunBundler.read.html#bluesky.bundlers.RunBundler.read">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">,</span> <span class="n">objs_with_reading</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">object</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]):</span>
+<span class="w">        </span><span class="sd">"""Add a reading to the open event bundle.</span>
+
 <span class="sd">        Expected message object is::</span>
 
-<span class="sd">            Msg('read', obj)</span>
+<span class="sd">            Msg('read', obj1, obj2, obj3, ...)</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bundling</span><span class="p">:</span>
-            <span class="n">obj</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">obj</span>
-            <span class="c1"># if the object is not in the _describe_cache, cache it</span>
-            <span class="c1"># Note: there is a race condition between the code here</span>
-            <span class="c1"># and in monitor() and collect(), so if you do them concurrently</span>
-            <span class="c1"># on the same device you make obj.describe() calls multiple times.</span>
-            <span class="c1"># As this is harmless and not an expected use case, we don't guard</span>
-            <span class="c1"># against it. Reading multiple devices concurrently works fine.</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">ensure_cached</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-
-            <span class="c1"># check that current read collides with nothing else in</span>
-            <span class="c1"># current event</span>
-            <span class="n">cur_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">describe_cache</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-            <span class="k">for</span> <span class="n">read_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objs_read</span><span class="p">:</span>
-                <span class="c1"># that is, field names</span>
-                <span class="n">known_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">describe_cache</span><span class="p">[</span><span class="n">read_obj</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">known_keys</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">cur_keys</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">"Data keys (field names) from </span><span class="si">{</span><span class="n">obj</span><span class="si">!r}</span><span class="s2"> "</span>
-                        <span class="sa">f</span><span class="s2">"collide with those from </span><span class="si">{</span><span class="n">read_obj</span><span class="si">!r}</span><span class="s2">. "</span>
-                        <span class="sa">f</span><span class="s2">"The colliding keys are </span><span class="si">{</span><span class="nb">set</span><span class="p">(</span><span class="n">known_keys</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">cur_keys</span><span class="si">}</span><span class="s2">"</span>
-                    <span class="p">)</span>
-
-            <span class="c1"># add this object to the cache of things we have read</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_objs_read</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-
-            <span class="c1"># Stash the results, which will be emitted the next time _save is</span>
-            <span class="c1"># called --- or never emitted if _drop is called instead.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">read_cache</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reading</span><span class="p">)</span>
-            <span class="c1"># Ask the object for any resource or datum documents is has cached</span>
-            <span class="c1"># and cache them as well. Likewise, these will be emitted if and</span>
-            <span class="c1"># when _save is called.</span>
-            <span class="n">asset_docs_collected</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">async</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">maybe_collect_asset_docs</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_asset_docs_cache</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">asset_docs_collected</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">reading</span></div>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
+                <span class="o">*</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_bundle_single_read</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">reading</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span><span class="p">,</span> <span class="n">reading</span> <span class="ow">in</span> <span class="n">objs_with_reading</span><span class="p">]</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RunBundler.monitor">
@@ -1399,7 +1408,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        where kwargs are passed through to ``obj.subscribe()``</span>
 <span class="sd">        """</span>
-        <span class="n">obj</span> <span class="o">=</span> <span class="n">check_supports</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="n">Subscribable</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">obj</span>
         <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The 'monitor' Msg does not accept positional arguments."</span><span class="p">)</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1412,21 +1421,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">stream_bundle</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_stream</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="n">obj</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_stream_cache</span><span class="o">.</span><span class="n">describe_cache</span><span class="p">[</span><span class="n">obj</span><span class="p">]})</span>
         <span class="n">compose_event</span> <span class="o">=</span> <span class="n">stream_bundle</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">emit_event</span><span class="p">(</span><span class="n">readings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Reading</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">readings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># We were passed something we can use, but check no args or kwargs</span>
-                <span class="k">assert</span> <span class="ow">not</span> <span class="n">args</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">,</span> <span class="p">(</span>
-                    <span class="s2">"If subscribe callback called with readings, args and kwargs are not supported."</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Ignore the inputs. Use this call as a signal to call read on the</span>
-                <span class="c1"># object, a crude way to be sure we get all the info we need.</span>
-                <span class="n">readable_obj</span> <span class="o">=</span> <span class="n">check_supports</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Readable</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-                <span class="n">readings</span> <span class="o">=</span> <span class="n">readable_obj</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
-                <span class="k">assert</span> <span class="ow">not</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isawaitable</span><span class="p">(</span><span class="n">readings</span><span class="p">),</span> <span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">readable_obj</span><span class="si">}</span><span class="s2"> has async read() method and the callback "</span>
-                    <span class="s2">"passed to subscribe() was not called with Dict[str, Reading]"</span>
-                <span class="p">)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">emit_event_from_readings</span><span class="p">(</span><span class="n">readings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Reading</span><span class="p">]):</span>
             <span class="n">data</span><span class="p">,</span> <span class="n">timestamps</span> <span class="o">=</span> <span class="n">_rearrange_into_parallel_dicts</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
             <span class="n">doc</span> <span class="o">=</span> <span class="n">compose_event</span><span class="p">(</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
@@ -1434,9 +1429,29 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">emit_sync</span><span class="p">(</span><span class="n">DocumentNames</span><span class="o">.</span><span class="n">event</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_monitor_params</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">emit_event</span><span class="p">,</span> <span class="n">kwargs</span>
-        <span class="c1"># TODO: deprecate **kwargs when Ophyd.v2 is available</span>
-        <span class="n">obj</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">emit_event</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">def</span><span class="w"> </span><span class="nf">emit_event_for_subscribe</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+            <span class="c1"># Ignore the inputs. Use this call as a signal to call read on the</span>
+            <span class="c1"># object, a crude way to be sure we get all the info we need.</span>
+            <span class="n">readable_obj</span> <span class="o">=</span> <span class="n">check_supports</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Readable</span><span class="p">)</span>
+            <span class="n">readings</span> <span class="o">=</span> <span class="n">readable_obj</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isawaitable</span><span class="p">(</span><span class="n">readings</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">readable_obj</span><span class="si">}</span><span class="s2"> has a subscribe() method rather than a "</span>
+                    <span class="s2">"subscribe_readings() method and an async read() method. "</span>
+                    <span class="s2">"If using ophyd-async, make sure you are using at least v0.13.5."</span>
+                <span class="p">)</span>
+            <span class="n">emit_event_from_readings</span><span class="p">(</span><span class="n">readings</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Subscribable</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_monitor_params</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">emit_event_from_readings</span><span class="p">,</span> <span class="n">kwargs</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">subscribe_reading</span><span class="p">(</span><span class="n">emit_event_from_readings</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">"subscribe"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_monitor_params</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span> <span class="o">=</span> <span class="n">emit_event_for_subscribe</span><span class="p">,</span> <span class="n">kwargs</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">emit_event_for_subscribe</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> does not implement Subscribable protocol or adhere to ophyd subscription pattern."</span> <span class="o">%</span> <span class="n">obj</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RunBundler.record_interruption">
@@ -1486,7 +1501,11 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">            Msg('unmonitor', obj)</span>
 <span class="sd">        """</span>
-        <span class="n">obj</span> <span class="o">=</span> <span class="n">check_supports</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="n">Subscribable</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">obj</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">"clear_sub"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> does not implement Subscribable protocol or adhere to ophyd subscription pattern."</span> <span class="o">%</span> <span class="n">obj</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="n">obj</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_monitor_params</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">IllegalMessageSequence</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot 'unmonitor' </span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s2">; it is not being monitored."</span><span class="p">)</span>
         <span class="n">cb</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_monitor_params</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span>
@@ -1760,7 +1779,10 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="p">{</span><span class="s2">"dtype"</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">}</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
         <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="ow">not</span> <span class="n">is_data_key</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">describe_collect</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="p">(</span>
-            <span class="s2">"Single nested data keys should be pre-declared"</span>
+            <span class="s2">"Single nested data keys should be pre-declared: describe_collect() of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">collect_object</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> returns the data keys of one stream, so declare that "</span>
+            <span class="s2">"stream before collecting, with declare_stream(..., name=..., collect=True) "</span>
+            <span class="s2">"or the stream_name and collect=True arguments of fly"</span>
         <span class="p">)</span>
 
         <span class="c1"># Make sure you can't use identical data keys in multiple streams</span>
@@ -2058,7 +2080,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># Warn for page collectable support</span>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">collect_objects</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">EventCollectable</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">EventPageCollectable</span><span class="p">):</span>
-                <span class="n">doc_logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="n">doc_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">"collect() was called for a device </span><span class="si">%r</span><span class="s2"> which is both EventCollectable "</span>
                     <span class="s2">"and EventPageCollectable. Using device.collect_pages()."</span><span class="p">,</span>
                     <span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
@@ -2085,9 +2107,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># If there is not a stream then we should be using an old-style doubly nested</span>
         <span class="c1"># and we need to describe_collect and prepare the nested streams.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">stream_name</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">collect_objects</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_descriptors</span> <span class="ow">or</span> <span class="p">(</span>
-                <span class="n">collect_objects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_descriptors</span>
-            <span class="p">):</span>
+            <span class="k">if</span> <span class="n">collect_objects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_descriptors</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">collect_objects</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">IllegalMessageSequence</span><span class="p">(</span>
                         <span class="s2">"If collecting multiple objects you must predeclare a stream for all "</span>

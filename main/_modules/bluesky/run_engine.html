@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bluesky.run_engine &#8212; bluesky 0.1.dev5738+g6a82217aa documentation</title>
+    <title>bluesky.run_engine &#8212; bluesky 1.15.2.dev293+g1fb2f4e13 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=55c26ed414f5f8a31ebb" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=55c26ed414f5f8a31ebb" />
 
-    <script src="../../_static/documentation_options.js?v=ff18209d"></script>
+    <script src="../../_static/documentation_options.js?v=8665b3c3"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
@@ -403,7 +403,7 @@ window.runMermaid = runMermaid;</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.17.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://blueskyproject.io/bluesky/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.dev5738+g6a82217aa';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '1.15.2.dev293+g1fb2f4e13';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             false;
         </script>
@@ -412,7 +412,7 @@ window.runMermaid = runMermaid;</script>
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="0.1.dev5738+g6a82217aa" />
+  <meta name="docsearch:version" content="1.15.2.dev293+g1fb2f4e13" />
   
     
     <script src="../../_static/searchtools.js"></script>
@@ -941,6 +941,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.bundlers</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunBundler</span><span class="p">,</span> <span class="n">maybe_await</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComposableLogAdapter</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">msg_logger</span><span class="p">,</span> <span class="n">state_logger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.protocols</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Executable</span><span class="p">,</span>
     <span class="n">Flyable</span><span class="p">,</span>
     <span class="n">Locatable</span><span class="p">,</span>
     <span class="n">Movable</span><span class="p">,</span>
@@ -981,16 +982,6 @@ window.runMermaid = runMermaid;</script>
 <span class="p">)</span>
 
 <span class="n">_SPAN_NAME_PREFIX</span> <span class="o">=</span> <span class="s2">"Bluesky RunEngine"</span>
-
-<span class="n">current_task</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">current_task</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="c1"># handle py &lt; 3,7</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">asyncio.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
-
-    <span class="n">current_task</span> <span class="o">=</span> <span class="n">Task</span><span class="o">.</span><span class="n">current_task</span>  <span class="c1"># type: ignore</span>
-    <span class="k">del</span> <span class="n">Task</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_RunEnginePanic</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span> <span class="o">...</span>
@@ -1329,9 +1320,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">loop</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">preprocessors</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">context_managers</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">md_validator</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">md_normalizer</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">scan_id_source</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Callable</span><span class="p">[[</span><span class="n">RunEngineMetadata</span><span class="p">],</span> <span class="n">SyncOrAsync</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">default_scan_id_source</span><span class="p">,</span>
+        <span class="n">md_validator</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">md_normalizer</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">scan_id_source</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">RunEngineMetadata</span><span class="p">],</span> <span class="n">SyncOrAsync</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">default_scan_id_source</span><span class="p">,</span>
         <span class="n">during_task</span><span class="p">:</span> <span class="n">DuringTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">call_returns_result</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1341,10 +1332,6 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_th</span> <span class="o">=</span> <span class="n">_ensure_event_loop_running</span><span class="p">(</span><span class="n">loop</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_state_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="o">=</span> <span class="n">loop</span>
-        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>  <span class="c1"># noqa: UP036</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"loop"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span><span class="p">}</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">AbstractEventLoop</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># When set, RunEngine.__call__ should stop blocking.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_blocking_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
@@ -1356,7 +1343,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">setup_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">setup_run_permit</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_run_permit</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_run_permit</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_run_permit</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
             <span class="n">setup_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
 
@@ -1423,7 +1410,9 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_run_bundlers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">RunBundler</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># a mapping of open run -&gt; bundlers</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_per_call</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># for all runs generated by one __call__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_deferred_pause_requested</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># pause at next 'checkpoint'</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># stored and then raised in the _run loop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]</span> <span class="o">|</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="kc">None</span>  <span class="c1"># stored and then raised in the _run loop</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interrupted</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># True if paused, aborted, or failed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_staged</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># objects staged, not yet unstaged</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_objs_seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># all objects seen</span>
@@ -1449,10 +1438,11 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># asyncio.Task associated with call to self._run</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># future proxy to the task above</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pardon_failures</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># will hold an asyncio.Event</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plan</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># the plan instance from __call__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plan</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Msg</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># the plan instance from __call__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_require_stream_declaration</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_command_registry</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">"declare_stream"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_declare_stream</span><span class="p">,</span>
+            <span class="s2">"execute"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_execute</span><span class="p">,</span>
             <span class="s2">"create"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create</span><span class="p">,</span>
             <span class="s2">"save"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save</span><span class="p">,</span>
             <span class="s2">"drop"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_drop</span><span class="p">,</span>
@@ -1637,11 +1627,17 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">disabled</span>
+        <span class="c1"># The adapter, not the logger, was asked here and written to below.</span>
+        <span class="c1"># `logging.LoggerAdapter` has no `disabled` of its own, so reading it</span>
+        <span class="c1"># raised until a write had made one, and a write silenced nothing:</span>
+        <span class="c1"># every level check logging makes goes to `self.logger.disabled`.</span>
+        <span class="c1"># Disabling reaches the whole `bluesky` logger, which is what it has</span>
+        <span class="c1"># always claimed to do -- the adapter is per-engine, the logger is not.</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">disabled</span>
 
     <span class="nd">@verbose</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">verbose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">value</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">call_returns_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1671,7 +1667,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reason</span> <span class="o">=</span> <span class="s2">""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_pardon_failures</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pardon_failures</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_plan</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_interrupted</span> <span class="o">=</span> <span class="kc">False</span>
 
@@ -1894,7 +1890,7 @@ window.runMermaid = runMermaid;</script>
             <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">funcs</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_temp_callback_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_plan</span> <span class="o">=</span> <span class="n">plan</span>  <span class="c1"># this ref is just used for metadata introspection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_plan</span> <span class="o">=</span> <span class="n">plan</span>  <span class="c1"># type: ignore # this ref is just used for metadata introspection</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_metadata_per_call</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata_kw</span><span class="p">)</span>
 
         <span class="n">gen</span> <span class="o">=</span> <span class="n">ensure_generator</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
@@ -2007,7 +2003,10 @@ window.runMermaid = runMermaid;</script>
             <span class="k">if</span> <span class="n">init_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">init_func</span><span class="p">()</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># No task was ever started; nothing to wait on or return.</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">NO_PLAN_RETURN</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_fut</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
                 <span class="k">except</span> <span class="n">concurrent</span><span class="o">.</span><span class="n">futures</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
@@ -2189,6 +2188,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="s2">"aborting"</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">was_paused</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+                <span class="k">return</span>
             <span class="k">if</span> <span class="n">justification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Justification for this suspension:</span><span class="se">\n</span><span class="si">{</span><span class="n">justification</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
@@ -2209,6 +2209,20 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">call_soon_threadsafe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">create_task</span><span class="p">,</span> <span class="n">_request_suspend</span><span class="p">(</span><span class="n">pre_plan</span><span class="p">,</span> <span class="n">post_plan</span><span class="p">,</span> <span class="n">justification</span><span class="p">))</span></div>
 
 
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_pause_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Tell every object the plan has touched that it is being held.</span>
+
+<span class="sd">        `bluesky.protocols.Pausable` and not ``hasattr(obj, "pause")``: the</span>
+<span class="sd">        protocol requires ``resume`` too, and something told a hold has begun</span>
+<span class="sd">        must be something that can be told it has ended.</span>
+<span class="sd">        """</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objs_seen</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Pausable</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pause</span><span class="p">())</span>
+                <span class="k">except</span> <span class="n">NoReplayAllowed</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_reset_checkpoint_state_meth</span><span class="p">()</span>
+
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_start_suspender</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        An internal message to do the initial work of starting a suspender</span>
@@ -2220,12 +2234,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># every object we ever set().</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_movable_objects</span><span class="p">(</span><span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Notify Devices of the pause in case they want to clean up.</span>
-        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objs_seen</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">"pause"</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="k">await</span> <span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pause</span><span class="p">())</span>
-                <span class="k">except</span> <span class="n">NoReplayAllowed</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_reset_checkpoint_state_meth</span><span class="p">()</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pause_objects</span><span class="p">()</span>
         <span class="c1"># rewind to the last checkpoint</span>
         <span class="n">rewind_plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rewind</span><span class="p">()</span>
         <span class="n">was_rewindable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewindable</span>
@@ -2344,7 +2353,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="s2">"stopping"</span>
         <span class="k">if</span> <span class="n">was_paused</span><span class="p">:</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_lock</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span> <span class="o">=</span> <span class="n">RequestStop</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span> <span class="o">=</span> <span class="n">RequestStop</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
 
@@ -2411,7 +2420,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="s2">"halting"</span>
         <span class="k">if</span> <span class="n">was_paused</span><span class="p">:</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_lock</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span> <span class="o">=</span> <span class="n">PlanHalt</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_exception</span> <span class="o">=</span> <span class="n">PlanHalt</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_exit_status</span> <span class="o">=</span> <span class="s2">"abort"</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_task</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
@@ -2456,7 +2465,7 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># that acts as a proxy that does not have the correct behavior</span>
         <span class="c1"># when `.cancel` is called on it.</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_lock</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="n">current_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">current_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="p">)</span>
         <span class="n">stashed_exception</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">debug</span> <span class="o">=</span> <span class="n">msg_logger</span><span class="o">.</span><span class="n">debug</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_reason</span> <span class="o">=</span> <span class="s2">""</span>
@@ -2492,12 +2501,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_movable_objects</span><span class="p">(</span><span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
                     <span class="c1"># Notify Devices of the pause in case they want to</span>
                     <span class="c1"># clean up.</span>
-                    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objs_seen</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Pausable</span><span class="p">):</span>
-                            <span class="k">try</span><span class="p">:</span>
-                                <span class="k">await</span> <span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">pause</span><span class="p">())</span>
-                            <span class="k">except</span> <span class="n">NoReplayAllowed</span><span class="p">:</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">_reset_checkpoint_state_meth</span><span class="p">()</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pause_objects</span><span class="p">()</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="s2">"paused"</span>
                     <span class="c1"># Let RunEngine.__call__ return...</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_blocking_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
@@ -2538,7 +2542,7 @@ window.runMermaid = runMermaid;</script>
                     <span class="c1"># current plan stack before rather than allowing a pause or</span>
                     <span class="c1"># suspension to try and finish firing.</span>
                     <span class="k">if</span> <span class="n">stashed_exception</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
                     <span class="c1"># always pop off a result, we are either sending it back in</span>
                     <span class="c1"># or throwing an exception in, in either case the left hand</span>
                     <span class="c1"># side of the yield in the plan will be moved past</span>
@@ -2706,15 +2710,15 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">_exit_status</span> <span class="o">=</span> <span class="s2">"success"</span>
             <span class="n">plan_return</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">value</span>
             <span class="c1"># TODO Is the sleep here necessary?</span>
-            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">RequestStop</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_exit_status</span> <span class="o">=</span> <span class="s2">"success"</span>
             <span class="c1"># TODO Is the sleep here necessary?</span>
-            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="n">FailedPause</span><span class="p">,</span> <span class="n">RequestAbort</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">,</span> <span class="n">PlanHalt</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_exit_status</span> <span class="o">=</span> <span class="s2">"abort"</span>
             <span class="c1"># TODO Is the sleep here necessary?</span>
-            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">"Run aborted"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">GeneratorExit</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_exit_status</span> <span class="o">=</span> <span class="s2">"fail"</span>  <span class="c1"># Exception raises during 'running'</span>
@@ -2773,7 +2777,7 @@ window.runMermaid = runMermaid;</script>
             <span class="k">raise</span> <span class="n">stashed_exception</span>
         <span class="k">return</span> <span class="n">plan_return</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_wait_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_wait_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="n">Msg</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Future</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""Instruct the RunEngine to wait for futures and return the resulting tasks.</span>
 
 <span class="sd">        Expected message object is:</span>
@@ -2791,7 +2795,22 @@ window.runMermaid = runMermaid;</script>
 
         <span class="p">(</span><span class="n">futs</span><span class="p">,)</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">args</span>
         <span class="n">futs</span> <span class="o">=</span> <span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">ensure_future</span><span class="p">(</span><span class="n">f</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">futs</span><span class="p">]</span>
-        <span class="n">completed</span><span class="p">,</span> <span class="n">pending</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">futs</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># These tasks are ours: nothing else holds a reference with which to</span>
+        <span class="c1"># cancel them. `asyncio.wait` does not cancel what it was waiting on</span>
+        <span class="c1"># when it is itself cancelled, so a plan aborted while parked here left</span>
+        <span class="c1"># them running on a loop about to be closed, and asyncio reported "Task</span>
+        <span class="c1"># was destroyed but it is pending!" at some unrelated later moment.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Only on the way out. A timeout leaves them alone deliberately: the</span>
+        <span class="c1"># awaitables are built by factories that work more than once, and</span>
+        <span class="c1"># waiting on the same group again after a timeout has to find whatever</span>
+        <span class="c1"># it was waiting for still in flight.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">completed</span><span class="p">,</span> <span class="n">pending</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">futs</span><span class="p">,</span> <span class="o">**</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">CancelledError</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">fut</span> <span class="ow">in</span> <span class="n">futs</span><span class="p">:</span>
+                <span class="n">fut</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+            <span class="k">raise</span>
         <span class="k">if</span> <span class="n">pending</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">WaitForTimeoutError</span><span class="p">(</span><span class="s2">"Plan failed to complete in the specified time"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">futs</span>
@@ -2859,13 +2878,13 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">            Msg('close_run', None, exit_status=None, reason=None)</span>
 
-<span class="sd">        if *exit_stats* and *reason* are not provided, use the values</span>
+<span class="sd">        if *exit_status* and *reason* are not provided, use the values</span>
 <span class="sd">        stashed on the RE.</span>
 <span class="sd">        """</span>
         <span class="c1"># TODO extract this from the Msg</span>
         <span class="n">run_key</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">run</span>
         <span class="k">if</span> <span class="p">(</span>
-            <span class="n">current_run</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_bundlers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run_key</span><span class="p">,</span> <span class="n">key_absence_sentinel</span> <span class="o">:=</span> <span class="nb">object</span><span class="p">)</span>
+            <span class="n">current_run</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_bundlers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run_key</span><span class="p">,</span> <span class="n">key_absence_sentinel</span> <span class="o">:=</span> <span class="nb">object</span><span class="p">())</span>
         <span class="p">)</span> <span class="ow">is</span> <span class="n">key_absence_sentinel</span><span class="p">:</span>
             <span class="n">ims_msg</span> <span class="o">=</span> <span class="s2">"A 'close_run' message was not received before the 'open_run' message"</span>
             <span class="k">raise</span> <span class="n">IllegalMessageSequence</span><span class="p">(</span><span class="n">ims_msg</span><span class="p">)</span>
@@ -2936,18 +2955,10 @@ window.runMermaid = runMermaid;</script>
             <span class="k">raise</span> <span class="n">IllegalMessageSequence</span><span class="p">(</span><span class="n">ims_msg</span><span class="p">)</span>
         <span class="k">return</span> <span class="k">await</span> <span class="n">current_run</span><span class="o">.</span><span class="n">declare_stream</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        Add a reading to the open event bundle.</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_perform_single_reading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="o">*</span><span class="n">read_args</span><span class="p">,</span> <span class="o">**</span><span class="n">read_kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Perform a reading on a single device."""</span>
 
-<span class="sd">        Expected message object is:</span>
-
-<span class="sd">            Msg('read', obj)</span>
-<span class="sd">        """</span>
-        <span class="n">obj</span> <span class="o">=</span> <span class="n">check_supports</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="n">Readable</span><span class="p">)</span>
-        <span class="c1"># actually _read_ the object</span>
-        <span class="n">warn_if_msg_args_or_kwargs</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">read</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="k">await</span> <span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="k">await</span> <span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="o">*</span><span class="n">read_args</span><span class="p">,</span> <span class="o">**</span><span class="n">read_kwargs</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">ret</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
@@ -2955,13 +2966,38 @@ window.runMermaid = runMermaid;</script>
                 <span class="s2">"This is a bug in your object implementation, "</span>
                 <span class="s2">"`read` must return a dictionary."</span>
             <span class="p">)</span>
-        <span class="n">run_key</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">run</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">current_run</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_bundlers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run_key</span><span class="p">,</span> <span class="n">key_absence_sentinel</span> <span class="o">:=</span> <span class="nb">object</span><span class="p">())</span>
-        <span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">key_absence_sentinel</span><span class="p">:</span>
-            <span class="k">await</span> <span class="n">current_run</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Add a reading to the open event bundle.</span>
+
+<span class="sd">        The obj and args of the read message are all objects to be read.</span>
+
+<span class="sd">        Expected message object is:</span>
+
+<span class="sd">            Msg('read', *objs)</span>
+
+<span class="sd">        """</span>
+
+        <span class="n">run_key</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">run</span>
+        <span class="n">objs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">((</span><span class="n">msg</span><span class="o">.</span><span class="n">obj</span><span class="p">,)</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">non_readable</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objs</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Readable</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">non_readable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"Run engine received a read message with which contained "</span>
+                <span class="sa">f</span><span class="s2">"the following devices which were not readable: </span><span class="si">{</span><span class="n">non_readable</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+        <span class="n">read_returns</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_perform_single_reading</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">current_run</span> <span class="o">:=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_bundlers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">run_key</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">current_run</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">read_returns</span><span class="p">)))</span>
+
+        <span class="n">all_readings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">read_ret</span> <span class="ow">in</span> <span class="n">read_returns</span><span class="p">:</span>
+            <span class="n">all_readings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">read_ret</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_readings</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_locate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="n">Msg</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -2969,17 +3005,22 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        Expected message object is:</span>
 
-<span class="sd">            Msg('locate', obj1, ..., objn, squeeze=True)</span>
+<span class="sd">            Msg('locate', obj1, ..., objn)</span>
 
 <span class="sd">        If a single obj is passed, obj.locate() is returned. If multiple objs</span>
 <span class="sd">        are passed, obj.locate() is called in parallel for all objs and a list</span>
-<span class="sd">        of the results returned. If squeeze is supplied and is False then it</span>
-<span class="sd">        will always return a list of results even with a single object.</span>
+<span class="sd">        of the results returned.</span>
 <span class="sd">        """</span>
+        <span class="k">if</span> <span class="s2">"squeeze"</span> <span class="ow">in</span> <span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">warn</span><span class="p">(</span>  <span class="c1"># noqa: B028</span>
+                <span class="s2">"The locate message ignores squeeze: one object returns a single "</span>
+                <span class="s2">"location and several objects return a list. squeeze will be removed "</span>
+                <span class="s2">"in a future version."</span>
+            <span class="p">)</span>
         <span class="n">objs</span> <span class="o">=</span> <span class="p">[</span><span class="n">check_supports</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Locatable</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">obj</span><span class="p">,)</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
         <span class="c1"># actually _locate_ the objects</span>
         <span class="n">coros</span> <span class="o">=</span> <span class="p">[</span><span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">locate</span><span class="p">())</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coros</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"squeeze"</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coros</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="k">await</span> <span class="n">coros</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">coros</span><span class="p">))</span>
@@ -3209,6 +3250,23 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">return</span> <span class="n">ret</span>
 
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Execute an RCP on a device and cache the returned status object.</span>
+
+<span class="sd">        Expected message object is:</span>
+
+<span class="sd">            Msg('execute', obj, *args, **kwargs)</span>
+<span class="sd">        """</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">check_supports</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">obj</span><span class="p">,</span> <span class="n">Executable</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"group"</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"execute_args"</span><span class="p">,</span> <span class="p">())</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"execute_kwargs"</span><span class="p">,</span> <span class="p">{}))</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_status_to_group</span><span class="p">(</span><span class="n">obj</span><span class="o">=</span><span class="n">obj</span><span class="p">,</span> <span class="n">status_object</span><span class="o">=</span><span class="n">ret</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">"execute"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_trigger</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Trigger a device and cache the returned status object.</span>
@@ -3367,7 +3425,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        where `sleep_time` is in seconds</span>
 <span class="sd">        """</span>
-        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_pause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Request the run engine to pause</span>
@@ -3381,23 +3439,25 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        """</span>
         <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_pause_coro</span><span class="p">(</span><span class="o">*</span><span class="n">msg</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">msg</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_resume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Request the run engine to resume</span>
-
-<span class="sd">        Expected message object is:</span>
-
-<span class="sd">            Msg('resume', defer=False, name=None, callback=None)</span>
-
-<span class="sd">        See RunEngine.resume() docstring for explanation of the three</span>
-<span class="sd">        keyword arguments in the `Msg` signature</span>
-<span class="sd">        """</span>
-        <span class="c1"># Re-instate monitoring callbacks.</span>
-        <span class="k">for</span> <span class="n">current_run</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_bundlers</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="k">await</span> <span class="n">current_run</span><span class="o">.</span><span class="n">restore_monitors</span><span class="p">()</span>
-        <span class="c1"># Notify Devices of the resume in case they want to clean up.</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_resume_objects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The plan is moving again: tell the devices, so they can prepare."""</span>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objs_seen</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Pausable</span><span class="p">):</span>
                 <span class="k">await</span> <span class="n">maybe_await</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">resume</span><span class="p">())</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_resume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The suspension is over: tell the devices.</span>
+
+<span class="sd">        Expected message object is:</span>
+
+<span class="sd">            Msg('_resume_from_suspender')</span>
+
+<span class="sd">        Sent by the helper plan `_start_suspender` pushes, between the hold and</span>
+<span class="sd">        the post-plan. Nothing to do with `RunEngine.resume`.</span>
+
+<span class="sd">        Monitors are untouched: a suspension never stopped them.</span>
+<span class="sd">        """</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resume_objects</span><span class="p">()</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Instruct the RunEngine to create a checkpoint so that we can rewind</span>
@@ -3417,7 +3477,7 @@ window.runMermaid = runMermaid;</script>
             <span class="c1"># We are at a checkpoint; we are done deferring the pause.</span>
             <span class="c1"># Give the _check_for_signals coroutine time to look for</span>
             <span class="c1"># additional SIGINTs that would trigger an abort.</span>
-            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_loop_for_kwargs</span><span class="p">)</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
             <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request_pause_coro</span><span class="p">(</span><span class="n">defer</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reset_checkpoint_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -3778,7 +3838,7 @@ window.runMermaid = runMermaid;</script>
 <span class="s2">the state of the RunEngine:</span>
 
 <span class="s2">RE.resume()    Resume the plan.</span>
-<span class="s2">RE.abort()     Perform cleanup, then kill plan. Mark exit_stats='aborted'.</span>
+<span class="s2">RE.abort()     Perform cleanup, then kill plan. Mark exit_status='aborted'.</span>
 <span class="s2">RE.stop()      Perform cleanup, then kill plan. Mark exit_status='success'.</span>
 <span class="s2">RE.halt()      Emergency Stop: Do not perform cleanup --- just stop.</span>
 <span class="s2">"""</span>
